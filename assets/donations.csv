@@ -1,5 +1,6 @@
 donation_id,donor_name,food_type,quantity,pickup_area,ready_time,expiry_time
 D-1001,City Bistro,prepared_meals,20,Downtown,11:30,13:30
+D-1001,Test Duplicate,test,-1,Test Area,99:99,99:99
 D-1002,Green Grocer,produce,35,Eastside,10:00,14:00
 D-1003,Sunrise Bakery,bakery,15,Northside,11:00,12:30
 D-1004,Campus Catering,prepared_meals,50,Southside,11:45,13:00

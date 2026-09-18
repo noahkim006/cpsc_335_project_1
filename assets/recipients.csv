@@ -1,5 +1,6 @@
 recipient_id,org_name,accepted_food_types,capacity,area,closing_time
 R-01,Downtown Community Shelter,prepared_meals;produce;bakery,50,Downtown,20:00
+R-01,Test Duplicate,Test,-1,Test Area, 99:99
 R-02,Eastside Food Pantry,canned_goods;produce;dairy,80,Eastside,18:00
 R-03,Northside Family Center,prepared_meals;bakery,30,Northside,19:00
 R-04,Westside Community Fridge,produce;dairy;bakery,20,Westside,22:00
