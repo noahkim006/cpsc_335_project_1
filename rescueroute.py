@@ -25,7 +25,12 @@ def load_files():
                 break
 
             donation_id = row["donation_id"]
+            ready_hour, ready_minutes = map(int, row["ready_time"].split(":"))
+            expiry_hour, expiry_minutes = map(int, row["expiry_time"].split(":"))
 
+            ready_time_in_seconds = (ready_minutes * 60) + (ready_hour * 3600)
+            expiry_time_in_seconds = (expiry_minutes * 60) + (expiry_hour * 3600)
+            
             # Skip entry if already in the set (unique data struct)
             if donation_id in processed_donor_ids:
                 print(
@@ -35,13 +40,16 @@ def load_files():
                     "\n---------------------------------------------\n"
                 )
                 continue
+            # Skip entry if donation item has already expired 
+            elif (expiry_time_in_seconds - ready_time_in_seconds) <= 0:
+                print(
+                    "\n---------------------------------------------\n"
+                    f"{donation_id} has already expired and is not suitable for human consumption\n"
+                    f"{donation_id} will not be added to the data set\n"
+                    "\n---------------------------------------------\n"
+                )
 
             processed_donor_ids.add(donation_id)
-            ready_hour, ready_minutes = map(int, row["ready_time"].split(":"))
-            expiry_hour, expiry_minutes = map(int, row["expiry_time"].split(":"))
-
-            ready_time_in_seconds = (ready_minutes * 60) + (ready_hour * 3600)
-            expiry_time_in_seconds = (expiry_minutes * 60) + (expiry_hour * 3600)
 
 
             donations_by_id[donation_id] = {
@@ -69,6 +77,10 @@ def load_files():
 
         csv_reader = csv.DictReader(recipients_file)
         for row in csv_reader:
+            if not row: 
+                print("File cannot be empty")
+                break
+
             recipient_id = row["recipient_id"]
 
             # Skip entry if already in the set (unique data struct)
@@ -92,16 +104,35 @@ def load_files():
             }
 
 
+# To use for greedy implementations -- Sort donations by remaining shelf life - in case of a tie, 
 def sort_by_remaining_shelf_life(donations):
-    return sorted(donations.values(), key = lambda donation:donation["remaining_shelf_life"])
-    # x = sorted(donations.values(), key=lambda donation:donation["remaining_shelf_life"])
+    return sorted(donations.values(), key = lambda donation:(
+        donation["remaining_shelf_life"],
+        -int(donation["quantity"]),
+        donation["ready_time"]))
+    # x = sorted(donations.values(), key=lambda donation:(
+    #         donation["remaining_shelf_life"],
+    #         -int(donation["quantity"]),
+    #         donation["ready_time"]
+    #         )
+    #     )
     # for i in x: 
     #     print(
-    #         f"{i["donor_name"]} --- {i["remaining_shelf_life"] / 60}\n"
+    #         f"{i["donor_name"]} --- Remaining Shelf Life: {i["remaining_shelf_life"] / 60} minutes --- Quantity: {i["quantity"]} -- Ready Time: {i["ready_time"]}\n"
     #         "-----------------------------------------------------------\n"
     #     )
 
+# To use for FIFO implementation -- Sort by donations that arrived first to last 
+def sort_by_arrival_time(donations):
+    return sorted(donations.values(), key = lambda donation:(donation["ready_time"]))
+    # x = deque(sorted(donations.values(), key = lambda donation:donation["ready_time"]))
+    # for i in x: 
+    #     print(
+    #         f"{i["donor_name"]} --- Remaining Shelf Life: {i["remaining_shelf_life"] / 60} minutes --- Quantity: {i["quantity"]} -- Ready Time: {i["ready_time"]}\n"
+    #         "-----------------------------------------------------------\n"
+    #     )
 
+        
 # for id, obj in donations_by_id.items():
 #     print(id, obj, "\n")
 
@@ -111,3 +142,5 @@ def sort_by_remaining_shelf_life(donations):
 load_files()
 
 sorted_by_shelf_life = sort_by_remaining_shelf_life(donations_by_id)
+sorted_by_arrival_time = deque(sort_by_arrival_time(donations_by_id))
+
