@@ -108,13 +108,11 @@ def load_files():
 def sort_by_remaining_shelf_life(donations):
     return sorted(donations.values(), key = lambda donation:(
         donation["remaining_shelf_life"],
-        -int(donation["quantity"]),
-        donation["ready_time"]))
+        -int(donation["quantity"]))
+    )
     # x = sorted(donations.values(), key=lambda donation:(
     #         donation["remaining_shelf_life"],
-    #         -int(donation["quantity"]),
-    #         donation["ready_time"]
-    #         )
+    #         -int(donation["quantity"]))
     #     )
     # for i in x: 
     #     print(
