@@ -3,9 +3,11 @@ from collections import deque
 
 donations_by_id = {}
 recipients_by_id = {}
+volunteers_by_id = {}
 
 processed_donor_ids = set()
 processed_recipient_ids = set()
+processed_volunteer_ids = set()
 
 def load_files():
     # Load donation information into dictionary -- O(n)
@@ -102,6 +104,39 @@ def load_files():
                 "area": row["area"],
                 "closing_time": row["closing_time"]
             }
+
+    with open("assets/volunteers.csv", 'r') as volunteers_file:
+        if os.path.getsize("assets/volunteers.csv") == 0:
+            print("Volunteers file contains no data")
+            quit()
+
+        csv_reader = csv.DictReader(volunteers_file)
+        for row in csv_reader:
+            if not row:
+                print("File cannot be empty")
+                break
+
+            volunteer_id = row["volunteer_id"]
+
+            if volunteer_id in processed_volunteer_ids:
+                print(
+                    "\n---------------------------------------------\n"
+                    f"{volunteer_id} already exists in the set\n"
+                    f"{volunteer_id} cannot be added to the set"
+                    "\n---------------------------------------------\n"
+                )
+                continue
+
+            processed_volunteer_ids.add(volunteer_id)
+
+            volunteers_by_id[volunteer_id] = {
+                "vehicle_capacity": row["vehicle_capacity"],
+                "area": row["area"],
+                "available_from": row["available_from"],
+                "available_until": row["available_until"],
+                "max_num_of_pickups": row["max_pickups"]
+            }
+     
 
 
 # To use for greedy implementations -- Sort donations by remaining shelf life - in case of a tie, 
