@@ -36,6 +36,10 @@ def create_assignment(
         "status": status
     }
 
+def time_to_minutes(time):
+    hours, minutes = map(int, time.split(":"))
+    return hours * 60 + minutes
+
 def load_files():
     # Load donation information into dictionary -- O(n)
     with open('assets/donations.csv', "r") as donation_file:
@@ -60,16 +64,6 @@ def load_files():
                 print(
                     "\n---------------------------------------------\n"
                     "Donation ID cannot be empty\n"
-                    "\n---------------------------------------------\n"
-                )
-                continue
-
-            ## Skipping duplication donation IDs
-            if donation_id in processed_donor_ids:
-                print(
-                    "\n---------------------------------------------\n"
-                    f"{donation_id} already exists in the set\n"
-                    f"{donation_id} cannot be added to the data set"
                     "\n---------------------------------------------\n"
                 )
                 continue
@@ -110,16 +104,20 @@ def load_files():
                 )
                 continue
 
-            ready_hour, ready_minutes = map(int, row["ready_time"].split(":"))
-            expiry_hour, expiry_minutes = map(int, row["expiry_time"].split(":"))
 
-            ready_time_in_seconds = (ready_minutes * 60) + (ready_hour * 3600)
-            expiry_time_in_seconds = (expiry_minutes * 60) + (expiry_hour * 3600)
+            ready_time_in_minutes = time_to_minutes(row["ready_time"])
+            expiry_time_in_minutes = time_to_minutes(row["expiry_time"])
 
-
-            
+            # Skip entry if donation item has already expired 
+            if (expiry_time_in_minutes - ready_time_in_minutes) <= 0:
+                print(
+                    "\n---------------------------------------------\n"
+                    f"{donation_id} has already expired and is not suitable for human consumption\n"
+                    f"{donation_id} will not be added to the data set\n"
+                    "\n---------------------------------------------\n"
+                )
+                continue
             # Skip entry if already in the set (unique data struct)
-            
             if donation_id in processed_donor_ids:
                 print(
                     "\n---------------------------------------------\n"
@@ -128,15 +126,6 @@ def load_files():
                     "\n---------------------------------------------\n"
                 )
                 continue
-            # Skip entry if donation item has already expired 
-            if (expiry_time_in_seconds - ready_time_in_seconds) <= 0:
-                print(
-                    "\n---------------------------------------------\n"
-                    f"{donation_id} has already expired and is not suitable for human consumption\n"
-                    f"{donation_id} will not be added to the data set\n"
-                    "\n---------------------------------------------\n"
-                )
-            # Skip 
 
             processed_donor_ids.add(donation_id)
 
@@ -144,11 +133,11 @@ def load_files():
             donations_by_id[donation_id] = {
                 "donor_name": row["donor_name"],
                 "food_type": row["food_type"],
-                "quantity": row["quantity"],
+                "quantity": quantity,
                 "pickup_area": row["pickup_area"],
                 "ready_time": row["ready_time"],
                 "expiry_time": row["expiry_time"],
-                "remaining_shelf_life": (expiry_time_in_seconds - ready_time_in_seconds)
+                "remaining_shelf_life": (expiry_time_in_minutes - ready_time_in_minutes)
             }
             # print(
             #     f"{donation_id} ready hour: {ready_hour}  --- ready minutes: {ready_minutes}\n"
@@ -217,7 +206,7 @@ def load_files():
             recipients_by_id[recipient_id] = {
                 "org_name": row["org_name"],
                 "accepted_food_types": row["accepted_food_types"],
-                "capacity": row["capacity"],
+                "capacity": capacity,
                 "area": row["area"],
                 "closing_time": row["closing_time"]
             }
@@ -289,11 +278,11 @@ def load_files():
             processed_volunteer_ids.add(volunteer_id)
 
             volunteers_by_id[volunteer_id] = {
-                "vehicle_capacity": row["vehicle_capacity"],
+                "vehicle_capacity": vehicle_capacity,
                 "area": row["area"],
                 "available_from": row["available_from"],
                 "available_until": row["available_until"],
-                "max_pickups": row["max_pickups"]
+                "max_pickups": max_pickups
             }
 
 
@@ -303,34 +292,45 @@ def sort_by_remaining_shelf_life(donations):
         donation["remaining_shelf_life"],
         -int(donation["quantity"]))
     )
-    # x = sorted(donations.values(), key=lambda donation:(
-    #         donation["remaining_shelf_life"],
-    #         -int(donation["quantity"]))
-    #     )
-    # for i in x: 
-    #     print(
-    #         f"{i["donor_name"]} --- Remaining Shelf Life: {i["remaining_shelf_life"] / 60} minutes --- Quantity: {i["quantity"]} -- Ready Time: {i["ready_time"]}\n"
-    #         "-----------------------------------------------------------\n"
-    #     )
-
 # To use for FIFO implementation -- Sort by donations that arrived first to last 
 def sort_by_arrival_time(donations):
-    return sorted(donations.values(), key = lambda donation:(donation["ready_time"]))
-    # x = deque(sorted(donations.values(), key = lambda donation:donation["ready_time"]))
-    # for i in x: 
-    #     print(
-    #         f"{i["donor_name"]} --- Remaining Shelf Life: {i["remaining_shelf_life"] / 60} minutes --- Quantity: {i["quantity"]} -- Ready Time: {i["ready_time"]}\n"
-    #         "-----------------------------------------------------------\n"
-    #     )
+    return sorted(donations.items(), key = lambda donation:(donation[1]["ready_time"]))
 
+def fifo_assignments(sorted_donations_by_arrival_time):
 
-# for id, obj in donations_by_id.items():
-#     print(id, obj, "\n")
+    possible_volunteer_id, possible_recipient_id = None, None
 
-# for id, obj in recipients_by_id.items():
-#     print(id, obj, "\n")
+    for donation_id, donation in sorted_donations_by_arrival_time:
+        # Check feasability of recipients and volunteers
+        for volunteer_id, volunteer in volunteers_by_id.items():
+            # Set the pickup time for donations as the latest time between donation ready time and 
+            # volunteer availability time since volunteer cant pick up food unless its ready
+            pickup_time = max(time_to_minutes(donation["ready_time"]), time_to_minutes(volunteer["available_from"]))
+            # Constraint check to see if volunteer meets all needed criteria to pick up the donation
+            if (
+                (donation["quantity"] <= volunteer["vehicle_capacity"]) 
+                and (donation["pickup_area"] == volunteer["area"]) 
+                and (volunteer["max_pickups"] > 0)
+                and (pickup_time <= time_to_minutes(volunteer["available_until"]))
+            ):
+                possible_volunteer_id = volunteer_id
+                break
+        for recipient_id, recipient in recipients_by_id.items():
+            recipient_accepted_food_types = recipient["accepted_food_types"].split(";")
+            if (
+                (donation["pickup_area"] == recipient["area"])
+                and (donation["food_type"] in recipient_accepted_food_types)
+                and (donation["quantity"] <= recipient["capacity"])
+                and (pickup_time <= time_to_minutes(recipient["closing_time"]))
+            ):
+                possible_recipient_id = recipient_id
+                break
+
+            
 
 load_files()
 
 sorted_by_shelf_life = sort_by_remaining_shelf_life(donations_by_id)
 sorted_by_arrival_time = deque(sort_by_arrival_time(donations_by_id))
+
+fifo_assignments(sorted_by_arrival_time)
