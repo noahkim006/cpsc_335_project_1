@@ -145,4 +145,4 @@ The prototype assumes zero travel, pickup, and delivery duration; a volunteer ca
 
 Sources used here are the supplied CPSC 335 RescueRoute Group Project Brief, supplied sample CSVs, the current program, and the adapted tests. Inputs are treated as simulated. Python standard-library modules provide CSV parsing, collections, file/path operations, testing, temporary files, mocking, and subprocess execution; no external service is called.
 
-AI assistance was used to revise implementation, adapt tests, and draft documentation. Students must verify and understand the submitted work and ensure this use and its disclosure comply with their course policy. No claim of instructor approval is made.
+AI assistance was used to revise implementation and adapt tests.
