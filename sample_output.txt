@@ -1,0 +1,61 @@
+Duplicate donation D-1001 skipped
+
+---------------------------------------------
+R-01 already exists in the set
+R-01 cannot be added to the set
+---------------------------------------------
+
+
+FIFO
+D-1001: Assigned to Downtown Community Shelter with V-101 at 11:30: 20 units fit recipient and vehicle capacity (25 units); food type and area match, pickup is within availability and closing time, and precedes expiry at 13:30.
+D-1002: Assigned to Eastside Food Pantry with V-102 at 10:00: 35 units fit recipient and vehicle capacity (40 units); food type and area match, pickup is within availability and closing time, and precedes expiry at 14:00.
+D-1003: Assigned to Northside Family Center with V-103 at 11:00: 15 units fit recipient and vehicle capacity (15 units); food type and area match, pickup is within availability and closing time, and precedes expiry at 12:30.
+D-1004: Unassigned: compatible recipients lack remaining capacity.
+D-1005: Unassigned: compatible recipients lack remaining capacity.
+D-1006: Unassigned: compatible recipients lack remaining capacity.
+D-1007: Assigned to Downtown Community Shelter with V-101 at 12:00: 10 units fit recipient and vehicle capacity (25 units); food type and area match, pickup is within availability and closing time, and precedes expiry at 12:20.
+D-1008: Unassigned: no recipient in the pickup area accepts this food type.
+D-1009: Unassigned: compatible recipients lack remaining capacity.
+D-1010: Assigned to Downtown Community Shelter with V-101 at 12:00: 5 units fit recipient and vehicle capacity (25 units); food type and area match, pickup is within availability and closing time, and precedes expiry at 18:00.
+D-1011: Unassigned: compatible recipients lack remaining capacity.
+D-1012: Unassigned: no recipient in the pickup area accepts this food type.
+
+Greedy
+D-1008: Unassigned: no recipient in the pickup area accepts this food type.
+Priority: D-1005 follows D-1008: earliest expiry first; ties use smaller quantity, earlier ready time, then CSV order.
+D-1005: Unassigned: compatible recipients lack remaining capacity.
+Priority: D-1007 follows D-1005: earliest expiry first; ties use smaller quantity, earlier ready time, then CSV order.
+D-1007: Assigned to Downtown Community Shelter with V-101 at 12:00: 10 units fit recipient and vehicle capacity (25 units); food type and area match, pickup is within availability and closing time, and precedes expiry at 12:20.
+Priority: D-1003 follows D-1007: earliest expiry first; ties use smaller quantity, earlier ready time, then CSV order.
+D-1003: Assigned to Northside Family Center with V-103 at 11:00: 15 units fit recipient and vehicle capacity (15 units); food type and area match, pickup is within availability and closing time, and precedes expiry at 12:30.
+Priority: D-1012 follows D-1003: earliest expiry first; ties use smaller quantity, earlier ready time, then CSV order.
+D-1012: Unassigned: no recipient in the pickup area accepts this food type.
+Priority: D-1004 follows D-1012: earliest expiry first; ties use smaller quantity, earlier ready time, then CSV order.
+D-1004: Unassigned: compatible recipients lack remaining capacity.
+Priority: D-1009 follows D-1004: earliest expiry first; ties use smaller quantity, earlier ready time, then CSV order.
+D-1009: Unassigned: compatible recipients lack remaining capacity.
+Priority: D-1001 follows D-1009: earliest expiry first; ties use smaller quantity, earlier ready time, then CSV order.
+D-1001: Assigned to Downtown Community Shelter with V-101 at 11:30: 20 units fit recipient and vehicle capacity (25 units); food type and area match, pickup is within availability and closing time, and precedes expiry at 13:30.
+Priority: D-1002 follows D-1001: earliest expiry first; ties use smaller quantity, earlier ready time, then CSV order.
+D-1002: Assigned to Eastside Food Pantry with V-102 at 10:00: 35 units fit recipient and vehicle capacity (40 units); food type and area match, pickup is within availability and closing time, and precedes expiry at 14:00.
+Priority: D-1011 follows D-1002: earliest expiry first; ties use smaller quantity, earlier ready time, then CSV order.
+D-1011: Unassigned: compatible recipients lack remaining capacity.
+Priority: D-1010 follows D-1011: earliest expiry first; ties use smaller quantity, earlier ready time, then CSV order.
+D-1010: Assigned to Downtown Community Shelter with V-101 at 12:00: 5 units fit recipient and vehicle capacity (25 units); food type and area match, pickup is within availability and closing time, and precedes expiry at 18:00.
+Priority: D-1006 follows D-1010: earliest expiry first; ties use smaller quantity, earlier ready time, then CSV order.
+D-1006: Unassigned: compatible recipients lack remaining capacity.
+
+Comparison (percentage differences are percentage points)
+Metric                               FIFO     Greedy  Greedy-FIFO
+Donations received                  12.00      12.00        +0.00
+Donations assigned                   5.00       5.00        +0.00
+Donations unassigned                 7.00       7.00        +0.00
+Food quantity rescued               85.00      85.00        +0.00
+Food quantity at risk              322.00     322.00        +0.00
+Urgent rescue rate (%)              33.33      33.33        +0.00
+Recipient utilization (%)           38.64      38.64        +0.00
+Volunteer utilization (%)           21.52      21.52        +0.00
+Urgent group: earliest-expiring quarter of valid donations, including cutoff ties.
+Invalid donation rows count as unassigned; duplicates are excluded. Unknown or nonpositive quantities contribute zero to quantity totals.
+Volunteer utilization uses vehicle capacity times maximum pickups across all volunteers.
+Simulation: one day; CSV order is arrival order; pickup/delivery duration is zero. No current-clock expiry check or real route scheduling is modeled.

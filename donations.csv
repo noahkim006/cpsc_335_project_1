@@ -1,0 +1,14 @@
+donation_id,donor_name,food_type,quantity,pickup_area,ready_time,expiry_time
+D-1001,City Bistro,prepared_meals,20,Downtown,11:30,13:30
+D-1001,Test Duplicate,test,-1,Test Area,99:99,99:99
+D-1002,Green Grocer,produce,35,Eastside,10:00,14:00
+D-1003,Sunrise Bakery,bakery,15,Northside,11:00,12:30
+D-1004,Campus Catering,prepared_meals,50,Southside,11:45,13:00
+D-1005,Farm Fresh Dairy,dairy,25,Westside,09:00,12:15
+D-1006,Corner Deli,canned_goods,60,Eastside,08:00,20:00
+D-1007,Ocean View Catering,prepared_meals,10,Downtown,12:00,12:20
+D-1008,Mountain Market,produce,45,Southside,10:30,11:45
+D-1009,Bella's Pizzeria,prepared_meals,30,Northside,11:00,13:15
+D-1010,Downtown Diner,bakery,5,Downtown,12:00,18:00
+D-1011,Valley Wholesale,dairy,100,Westside,09:30,15:00
+D-1012,Seaside Seafood,seafood,12,Eastside,11:00,13:00
