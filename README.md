@@ -107,6 +107,7 @@ Let D be valid donations, R recipients, V volunteers, and F the maximum food-cat
 ## Individual Contribution Statements
 - Noah Kim ) Created data set, implemented data loading from files and FIFO / Greedy algorithms with Steven Pettit.
 - Steven Pettit ) Implemented data verification from files, csv. verification, and FIFO / Greedy algorithms with Noah Kim.
+- Jorge Flores ) Contributed with the testing requirement and Metrics
 
 ## Project documentation and attribution
 
