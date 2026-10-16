@@ -105,7 +105,8 @@ Let D be valid donations, R recipients, V volunteers, and F the maximum food-cat
 - Additional working space is O(D + R + V) for orders, results, audit records, and resource counters, excluding input text sizes. Printed report length grows with decisions and explanations.
 
 ## Individual Contribution Statements
-- Noah Kim) Created data set, implemented data loading from files and FIFO / Greedy algorithms with Steven Pettis.
+- Noah Kim ) Created data set, implemented data loading from files and FIFO / Greedy algorithms with Steven Pettit.
+- Steven Pettit ) Implemented data verification from files, csv. verification, and FIFO / Greedy algorithms with Noah Kim.
 
 ## Project documentation and attribution
 
