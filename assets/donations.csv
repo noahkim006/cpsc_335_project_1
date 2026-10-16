@@ -13,3 +13,7 @@ D-1010,Downtown Diner,bakery,5,Downtown,12:00,18:00
 D-1011,Valley Wholesale,dairy,100,Westside,09:30,15:00
 D-1012,Seaside Seafood,seafood,12,Eastside,11:00,13:00
 D-1013,Expired Empanadas,prepared_meals,20,Southside,13:00,09:30
+D-1014,Harbor Hotel,prepared_meals,25,Downtown,10:00,14:00
+D-1015,Early Bird Cafe,produce,25,Harborside,08:00,20:00
+D-1016,Pier Banquet Hall,prepared_meals,70,Harborside,11:00,12:00
+D-1017,Dockside Deli,prepared_meals,10,Harborside,08:30,19:00
