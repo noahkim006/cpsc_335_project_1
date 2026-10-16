@@ -104,6 +104,9 @@ Let D be valid donations, R recipients, V volunteers, and F the maximum food-cat
 - Each metric calculation sorts expiry values, O(D log D), then scans results and entity totals. Thus the full FIFO pipeline also includes an O(D log D) metrics step even though FIFO ordering itself is linear.
 - Additional working space is O(D + R + V) for orders, results, audit records, and resource counters, excluding input text sizes. Printed report length grows with decisions and explanations.
 
+## Individual Contribution Statements
+- Noah Kim) Created data set, implemented data loading from files and FIFO / Greedy algorithms with Steven Pettis.
+
 ## Project documentation and attribution
 
 Sources used here are the supplied CPSC-335 RescueRoute Group Project Brief and CPSC-335 class slides units 1-7. Python standard-library modules provide functions to the system as described in https://docs.python.org/3/library/index.html
