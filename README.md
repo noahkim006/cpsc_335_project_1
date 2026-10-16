@@ -10,7 +10,7 @@ The application and tests use only the Python standard library; no package insta
 Running the application:
 
 ```bash
-python rescueroute_final.py
+python rescueroute.py
 ```
 
 Run all tests:
