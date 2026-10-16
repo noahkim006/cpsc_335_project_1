@@ -9,7 +9,12 @@ processed_donor_ids = set()
 processed_recipient_ids = set()
 processed_volunteer_ids = set()
 
-assignments = []
+fifo_assignments = []
+fifo_rejected = []
+
+greedy_assignments = []
+greedy_rejected = []
+
 
 ## following can be used as a framework for other validation tests
 def valid_time(time):
@@ -288,19 +293,32 @@ def load_files():
 
 # To use for greedy implementations -- Sort donations by remaining shelf life - in case of a tie, 
 def sort_by_remaining_shelf_life(donations):
-    return sorted(donations.values(), key = lambda donation:(
-        donation["remaining_shelf_life"],
-        -int(donation["quantity"]))
+    return sorted(
+        donations.items(), 
+        key = lambda donation:(
+            donation[1]["remaining_shelf_life"],
+            donation[1]["quantity"],
+            time_to_minutes(donation[1]["ready_time"])
+        )
     )
 # To use for FIFO implementation -- Sort by donations that arrived first to last 
 def sort_by_arrival_time(donations):
     return sorted(donations.items(), key = lambda donation:(donation[1]["ready_time"]))
 
-def fifo_assignments(sorted_donations_by_arrival_time):
+def fifo_implementation(sorted_donations_by_arrival_time):
 
-    possible_volunteer_id, possible_recipient_id = None, None
+    #Track remaining resources seperately for each implementation of FIFO/greedy
+    remaining_recipient_capacity = {
+        recipient_id: recipient["capacity"]
+        for recipient_id, recipient in recipients_by_id.items()
+    }
+    remaining_volunteer_pickups = {
+        volunteer_id: volunteer["max_pickups"]
+        for volunteer_id, volunteer in volunteers_by_id.items()
+    }
 
     for donation_id, donation in sorted_donations_by_arrival_time:
+        possible_volunteer_id, possible_recipient_id, possible_pickup_time = None, None, None
         # Check feasability of recipients and volunteers
         for volunteer_id, volunteer in volunteers_by_id.items():
             # Set the pickup time for donations as the latest time between donation ready time and 
@@ -308,29 +326,161 @@ def fifo_assignments(sorted_donations_by_arrival_time):
             pickup_time = max(time_to_minutes(donation["ready_time"]), time_to_minutes(volunteer["available_from"]))
             # Constraint check to see if volunteer meets all needed criteria to pick up the donation
             if (
-                (donation["quantity"] <= volunteer["vehicle_capacity"]) 
-                and (donation["pickup_area"] == volunteer["area"]) 
-                and (volunteer["max_pickups"] > 0)
-                and (pickup_time <= time_to_minutes(volunteer["available_until"]))
+                donation["quantity"] <= volunteer["vehicle_capacity"]
+                and donation["pickup_area"] == volunteer["area"]
+                and remaining_volunteer_pickups[volunteer_id] > 0
+                and pickup_time <= time_to_minutes(volunteer["available_until"])
+                and pickup_time <= time_to_minutes(donation["expiry_time"])
             ):
-                possible_volunteer_id = volunteer_id
-                break
+                for recipient_id, recipient in recipients_by_id.items():
+                    recipient_accepted_food_types = recipient["accepted_food_types"].split(";")
+                    if (
+                        (donation["pickup_area"] == recipient["area"])
+                        and (donation["food_type"] in recipient_accepted_food_types)
+                        and (donation["quantity"] <= remaining_recipient_capacity[recipient_id])
+                        and (pickup_time <= time_to_minutes(recipient["closing_time"]))
+                    ):
+                        possible_recipient_id = recipient_id
+                        possible_volunteer_id = volunteer_id
+                        possible_pickup_time = pickup_time
+                        break
+
+                if possible_recipient_id is not None:
+                    break
+
+        if possible_volunteer_id is not None and possible_recipient_id is not None:
+            scheduled_time = (
+                f"{possible_pickup_time // 60:02d}:"
+                f"{possible_pickup_time % 60:02d}"
+            )
+
+            print(
+                "----------------------------------------------------------------\n"
+                f"Volunteer {possible_volunteer_id} with "
+                f"{volunteers_by_id[possible_volunteer_id]['vehicle_capacity']} "
+                f"space was able to pick up donation {donation_id} "
+                f"(size: {donation['quantity']}) and deliver it to "
+                f"{recipients_by_id[possible_recipient_id]['org_name']}\n"
+                "----------------------------------------------------------------\n"
+            )
+
+            fifo_assignments.append(
+                create_assignment(
+                    donation_id,
+                    possible_recipient_id,
+                    possible_volunteer_id,
+                    scheduled_time,
+                    "Assigned: all matching constraints were satisfied.",
+                    "assigned"
+                )
+            )
+            remaining_recipient_capacity[possible_recipient_id] -= donation["quantity"]
+            remaining_volunteer_pickups[possible_volunteer_id] -= 1
+        else:
+            print(f"{donation_id} was rejected\n")
+
+            fifo_rejected.append(
+                create_assignment(
+                    donation_id,
+                    None,
+                    None,
+                    None,
+                    "Unassigned: no feasible recipient-volunteer pair was found.",
+                    "unassigned"
+                )
+            )
+
+
+def greedy_implementation(sorted_doonations_by_shelf_life):
+    #Track remaining resources seperately for each implementation of FIFO/greedy
+    remaining_recipient_capacity = {
+        recipient_id: recipient["capacity"]
+        for recipient_id, recipient in recipients_by_id.items()
+    }
+    remaining_volunteer_pickups = {
+        volunteer_id: volunteer["max_pickups"]
+        for volunteer_id, volunteer in volunteers_by_id.items()
+    }
+
+    for donation_id, donation in sorted_doonations_by_shelf_life:
+        possible_volunteer_id, possible_recipient_id, possible_pickup_time = None, None, None
+
+        # Same constraint rules as FIFO since the greedy implementation can be seen in our sorting method, which prioritizes 
+        # donations with remaining shelf life
         for recipient_id, recipient in recipients_by_id.items():
             recipient_accepted_food_types = recipient["accepted_food_types"].split(";")
-            if (
-                (donation["pickup_area"] == recipient["area"])
-                and (donation["food_type"] in recipient_accepted_food_types)
-                and (donation["quantity"] <= recipient["capacity"])
-                and (pickup_time <= time_to_minutes(recipient["closing_time"]))
+            if(
+                donation["pickup_area"] != recipient["area"]
+                or donation["food_type"] not in recipient_accepted_food_types
+                or donation["quantity"] > remaining_recipient_capacity[recipient_id]
             ):
-                possible_recipient_id = recipient_id
+                continue
+
+            for volunteer_id, volunteer in volunteers_by_id.items():
+                pickup_time = max(time_to_minutes(donation["ready_time"]), time_to_minutes(volunteer["available_from"]))
+
+                if (
+                    donation["quantity"] <= volunteer["vehicle_capacity"]
+                    and donation["pickup_area"] == volunteer["area"]
+                    and remaining_volunteer_pickups[volunteer_id] > 0
+                    and pickup_time <= time_to_minutes(volunteer["available_until"])
+                    and pickup_time <= time_to_minutes(donation["expiry_time"])
+                    and pickup_time <= time_to_minutes(recipient["closing_time"])
+                ):
+                    possible_recipient_id = recipient_id
+                    possible_volunteer_id = volunteer_id
+                    possible_pickup_time = pickup_time
+                    break
+
+            if possible_volunteer_id is not None:
                 break
 
-            
+        if possible_volunteer_id is not None:
+            scheduled_time = (
+                f"{possible_pickup_time // 60:02d}:"
+                f"{possible_pickup_time % 60:02d}"
+            )
+
+            reason = (
+                "Assigned by urgency-first order: food type, area, capacity, "
+                "volunteer availability, expiry, and recipient closing-time "
+                "constraints were satisfied."
+            )
+
+            greedy_assignments.append(
+                create_assignment(
+                    donation_id,
+                    possible_recipient_id,
+                    possible_volunteer_id,
+                    scheduled_time,
+                    reason,
+                    "assigned"
+                )
+            )
+
+            remaining_recipient_capacity[possible_recipient_id] -= donation["quantity"]
+            remaining_volunteer_pickups[possible_volunteer_id] -= 1
+        else:
+            greedy_rejected.append(
+                create_assignment(
+                    donation_id,
+                    None,
+                    None,
+                    None,
+                    "Unassigned: no feasible recipient-volunteer pair was found.",
+                    "unassigned"
+                )
+            )
+
 
 load_files()
 
 sorted_by_shelf_life = sort_by_remaining_shelf_life(donations_by_id)
 sorted_by_arrival_time = deque(sort_by_arrival_time(donations_by_id))
 
-fifo_assignments(sorted_by_arrival_time)
+fifo_implementation(sorted_by_arrival_time)
+greedy_implementation(sorted_by_shelf_life)
+
+print(greedy_assignments)
+print("\n\n\n\n\n")
+print(greedy_rejected)
